@@ -1,12 +1,18 @@
-FROM python:3.12-slim
+ARG PYTHON_VERSION
+
+FROM python:${PYTHON_VERSION}
 
 WORKDIR /app
+
+RUN useradd -m appuser
 
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py .
+COPY --chown==appuser app.py .
+
+USER appuser
 
 EXPOSE 8080
 
