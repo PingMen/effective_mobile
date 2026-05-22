@@ -1,0 +1,190 @@
+# Flask + Nginx Docker Compose
+
+## Описание проекта
+
+Проект состоит из двух сервисов:
+
+- `backend` — Flask-приложение на Python
+- `nginx` — reverse proxy сервер
+
+Nginx принимает HTTP-запросы на порт `80`
+и проксирует их в backend-сервис.
+
+---
+
+# Используемые технологии
+
+- Python 3.12
+- Flask
+- Docker
+- Docker Compose
+- Nginx
+
+---
+
+# Структура проекта
+
+```bash
+.
+├── backend/
+│   ├── app.py
+│   ├── requirements.txt
+│   └── Dockerfile
+│
+├── nginx/
+│   └── nginx.conf
+│
+└── docker-compose.yml
+```
+
+---
+
+# Пошаговая инструкция запуска
+
+## 1. Клонировать репозиторий
+
+```bash
+git clone <repository_url>
+cd <project_name>
+```
+
+---
+
+## 2. Запустить проект
+
+Выполнить команду:
+
+```bash
+docker compose up -d --build
+```
+
+Параметры:
+
+- `-d` — запуск в фоне
+- `--build` — пересборка образов
+
+---
+
+## 3. Проверить, что контейнеры запущены
+
+```bash
+docker ps
+```
+
+Ожидается два контейнера:
+
+- backend
+- nginx
+
+---
+
+# Проверка работоспособности
+
+## Проверка через браузер
+
+Открыть:
+
+```bash
+http://localhost
+```
+
+---
+
+## Проверка через curl
+
+```bash
+curl http://localhost
+```
+
+Ожидаемый результат:
+
+```bash
+Привет, Habr, из Docker-контейнера!
+```
+
+---
+
+# Архитектура проекта
+
+## Схема взаимодействия
+
+```text
+            HTTP :80
++--------+ -------------> +--------+
+| Client |                | Nginx  |
++--------+ <------------- +--------+
+                               |
+                               |
+                               | proxy_pass
+                               v
+                         +-------------+
+                         | Flask App   |
+                         | backend:8080|
+                         +-------------+
+```
+
+---
+
+# Как работает схема nginx → backend
+
+1. Пользователь отправляет HTTP-запрос на порт `80`
+
+2. Запрос попадает в контейнер `nginx`
+
+3. Nginx перенаправляет запрос в backend:
+
+```nginx
+proxy_pass http://backend:8080;
+```
+
+4. Flask-приложение обрабатывает запрос
+   и возвращает ответ
+
+5. Nginx отдает ответ клиенту
+
+---
+
+# Конфигурация Nginx
+
+```nginx
+upstream backend_app {
+    server backend:8080;
+}
+
+server {
+    listen 80;
+
+    location / {
+        proxy_pass http://backend_app;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+---
+
+# Полезные команды
+
+## Просмотр логов
+
+```bash
+docker compose logs -f
+```
+
+---
+
+## Остановка проекта
+
+```bash
+docker compose down
+```
+
+---
+
+## Перезапуск проекта
+
+```bash
+docker compose up -d --build
+```
